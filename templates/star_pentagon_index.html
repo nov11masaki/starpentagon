@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星形五角形 AI数学チューター</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/star_pentagon.css', v=timestamp) }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <h1>🌟 星形五角形 AI数学チューター</h1>
+            <div class="header-controls">
+                <button id="settingsBtn" class="btn btn-secondary">⚙️ 設定</button>
+                <button id="helpBtn" class="btn btn-secondary">❓ ヘルプ</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- セッション開始画面 -->
+        <div id="sessionStart" class="section active">
+            <div class="card welcome-card">
+                <h2>🌟 星形五角形の学習を始めましょう</h2>
+                <p>このチューターは星形五角形の内角の和を求める問題に特化しています。<br>
+                あなたの解法を分析し、最適なヒントを提供します。</p>
+                
+                <div class="setup-options">
+                    <div class="option-group">
+                        <label for="supportLevel">サポートレベル:</label>
+                        <select id="supportLevel" class="form-control">
+                            <option value="minimal">最小限</option>
+                            <option value="adaptive" selected>適応的</option>
+                            <option value="extensive">充実</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="difficulty">難易度:</label>
+                        <select id="difficulty" class="form-control">
+                            <option value="basic">基本</option>
+                            <option value="standard" selected>標準</option>
+                            <option value="advanced">発展</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="hintFrequency">ヒント頻度:</label>
+                        <select id="hintFrequency" class="form-control">
+                            <option value="low">少なめ</option>
+                            <option value="moderate" selected>適度</option>
+                            <option value="high">多め</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="startSessionBtn" class="btn btn-primary btn-large">
+                    🚀 学習開始
+                </button>
+            </div>
+        </div>
+
+        <!-- 問題解決エリア -->
+        <div id="problemSolving" class="section">
+            <div class="problem-layout">
+                <!-- 左側: 問題と解答例 -->
+                <div class="left-panel">
+                    <div class="card problem-card">
+                        <h3>📝 問題</h3>
+                        <div class="problem-content">
+                            <p>星形五角形の内角の和を求めなさい。</p>
+                            <div class="star-pentagon-figure">
+                                <svg width="200" height="200" viewBox="0 0 200 200">
+                                    <!-- 星形五角形の描画 -->
+                                    <polygon points="100,20 76,80 20,80 64,112 46,172 100,140 154,172 136,112 180,80 124,80"
+                                             fill="none" stroke="#3498db" stroke-width="2"/>
+                                    <!-- 内角の印 -->
+                                    <circle cx="100" cy="20" r="3" fill="#e74c3c"/>
+                                    <circle cx="46" cy="172" r="3" fill="#e74c3c"/>
+                                    <circle cx="154" cy="172" r="3" fill="#e74c3c"/>
+                                    <circle cx="20" cy="80" r="3" fill="#e74c3c"/>
+                                    <circle cx="180" cy="80" r="3" fill="#e74c3c"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card examples-card">
+                        <h3>📖 解法パターン例</h3>
+                        <div id="solutionExamples" class="examples-list">
+                            <!-- 動的に解答例を表示 -->
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- 右側: ホワイトボードとサポート -->
+                <div class="right-panel">
+                    <div class="card workspace-card">
+                        <h3>✏️ ホワイトボード解答エリア</h3>
+                        <div class="whiteboard-container">
+                            <canvas id="whiteboard" width="600" height="400"></canvas>
+                            <div class="whiteboard-overlay">
+                                <div id="recognizedText" class="recognized-text"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="workspace-controls">
+                            <button id="recognizeBtn" class="btn btn-primary">🔍 手書き認識</button>
+                            <button id="analyzeBtn" class="btn btn-primary">� 解法分析</button>
+                            <button id="hintBtn" class="btn btn-warning">💡 ヒント</button>
+                            <button id="clearCanvasBtn" class="btn btn-secondary">🗑️ クリア</button>
+                        </div>
+                        
+                        <div class="drawing-tools">
+                            <label>ペンの太さ:</label>
+                            <input type="range" id="penSize" min="1" max="10" value="3" class="range-control">
+                            <label>色:</label>
+                            <input type="color" id="penColor" value="#2c3e50" class="color-control">
+                            <button id="eraserBtn" class="btn btn-sm">🧽 消しゴム</button>
+                        </div>
+                    </div>
+
+                    <!-- リアルタイム分析パネル -->
+                    <div class="card analysis-card">
+                        <h3>📊 リアルタイム分析</h3>
+                        <div id="analysisContent" class="analysis-content">
+                            <div class="analysis-item">
+                                <strong>解法パターン:</strong>
+                                <span id="currentPattern">分析中...</span>
+                            </div>
+                            <div class="analysis-item">
+                                <strong>進捗段階:</strong>
+                                <span id="progressStage">初期段階</span>
+                            </div>
+                            <div class="analysis-item">
+                                <strong>推定難易度:</strong>
+                                <span id="estimatedDifficulty">-</span>
+                            </div>
+                            <div class="analysis-item">
+                                <strong>信頼度:</strong>
+                                <div class="confidence-bar">
+                                    <div id="confidenceLevel" class="confidence-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ヒント・サポートパネル -->
+                    <div class="card hints-card">
+                        <h3>💡 アドバイス</h3>
+                        <div id="hintsContent" class="hints-content">
+                            <p class="hint-placeholder">解法を入力すると、適切なヒントが表示されます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 進捗表示 -->
+        <div id="progressDisplay" class="progress-overlay">
+            <div class="progress-content">
+                <h3>📈 学習進捗</h3>
+                <div id="sessionProgress" class="session-progress">
+                    <!-- 動的に更新 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 設定モーダル -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ 設定</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label>🔧 サポートレベル</label>
+                    <select id="modalSupportLevel" class="form-control">
+                        <option value="minimal">最小限 - 必要最小限のヒント</option>
+                        <option value="adaptive">適応的 - 進捗に応じたサポート</option>
+                        <option value="extensive">充実 - 詳細なガイダンス</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <label>⚖️ 分析感度</label>
+                    <input type="range" id="analysisSensitivity" min="1" max="10" value="5" class="range-control">
+                    <span class="range-value">5</span>
+                </div>
+                
+                <div class="setting-group">
+                    <label>⏱️ 自動分析間隔 (秒)</label>
+                    <input type="number" id="autoAnalysisInterval" min="5" max="60" value="10" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="btn btn-primary">保存</button>
+                <button id="cancelSettingsBtn" class="btn btn-secondary">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ヘルプモーダル -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>❓ 使い方ガイド</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>🌟 星形五角形とは</h4>
+                    <p>星形五角形は正五角形の各頂点を一つおきに結んで作られる図形です。内角の和を求める方法はいくつかあります。</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🎯 解法パターン (12+1種類)</h4>
+                    <ul>
+                        <li><strong>三角形5つと内部の五角形に着目:</strong> 基本的な三角形分解</li>
+                        <li><strong>ブーメラン形と三角形の内角の和に着目:</strong> ブーメラン型補助線利用</li>
+                        <li><strong>ちょうちょ形と三角の内角の和に着目:</strong> 対称な蝶型図形分析</li>
+                        <li><strong>内側の五角形の外角の和と外側の五角形の内角の和に着目:</strong> 内外五角形関係</li>
+                        <li><strong>内側と外側の五角形の内角の和，三角形の内角の和に着目:</strong> 複合分析</li>
+                        <li><strong>ブーメラン形と五角形の内角の和に着目:</strong> ブーメランと五角形の代数的関係</li>
+                        <li><strong>三角形の外角の和と三角形の内角の和に着目:</strong> 外角・内角性質利用</li>
+                        <li><strong>三角形5つの内角の和と五角形の内角の和に着目し,連立する:</strong> 連立方程式による解法</li>
+                        <li><strong>三角形4つの内角の和と五角形の外角の和に着目する:</strong> 4つの三角形と外角関係</li>
+                        <li><strong>五角形の外角の和に着目する:</strong> 外角の和の性質を直接利用</li>
+                        <li><strong>五角形の内角の和に着目する:</strong> 内角の和の性質利用</li>
+                        <li><strong>ブーメラン形と三角形の外角の和に着目:</strong> ブーメラン型と外角の複合分析</li>
+                        <li><strong>その他:</strong> 上記12パターン以外の解法や独自手法</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🔧 システムの使い方</h4>
+                    <ol>
+                        <li>ホワイトボードに手書きで解法を描画</li>
+                        <li>「手書き認識」ボタンで文字・数式を認識</li>
+                        <li>システムが自動的に12+1種類の解法パターンから推定</li>
+                        <li>データセットベースの実際の解法例を参照可能</li>
+                        <li>進捗に応じて適切なヒントを提供</li>
+                        <li>躓いた時は自動的にサポートを表示</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知システム -->
+    <div id="notifications" class="notification-container"></div>
+
+    <script src="{{ url_for('static', filename='js/star_pentagon.js', v=timestamp) }}"></script>
+</body>
+</html>

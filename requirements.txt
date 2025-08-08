@@ -1,0 +1,9 @@
+flask
+python-dotenv
+google-generativeai
+sympy
+numpy
+matplotlib
+pillow
+opencv-python
+requests

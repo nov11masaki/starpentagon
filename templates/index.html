@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI数学チューター - 手書きホワイトボード</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=timestamp) }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <h1>🧮 AI数学チューター</h1>
+            <p class="subtitle">手書きで解いて、AIが思考プロセスを分析</p>
+        </header>
+
+        <!-- メインコンテンツエリア -->
+        <div class="main-content">
+            <!-- 左パネル: 問題選択・表示 -->
+            <div class="left-panel">
+                <!-- 問題フィルター -->
+                <section class="problem-filters">
+                    <h2>📚 問題を選択</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">すべて</button>
+                        <button class="filter-tab" data-filter="数学I">数学I</button>
+                        <button class="filter-tab" data-filter="数学A">数学A</button>
+                        <button class="filter-tab" data-filter="数学II">数学II</button>
+                        <button class="filter-tab" data-filter="数学B">数学B</button>
+                        <button class="filter-tab" data-filter="数学III">数学III</button>
+                        <button class="filter-tab" data-filter="数学C">数学C</button>
+                    </div>
+                    <div class="difficulty-filter">
+                        <label for="difficultySelect">難易度:</label>
+                        <select id="difficultySelect">
+                            <option value="all">すべて</option>
+                            <option value="basic">基礎</option>
+                            <option value="intermediate">標準</option>
+                            <option value="advanced">応用</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- 問題一覧 -->
+                <section class="problem-list-section">
+                    <div class="problem-list" id="problemList">
+                        <!-- 問題一覧がここに動的に表示されます -->
+                    </div>
+                </section>
+
+                <!-- 選択された問題表示 -->
+                <section class="problem-display" id="problemDisplay" style="display: none;">
+                    <h2>📋 問題</h2>
+                    <div class="problem-content" id="problemContent">
+                        <!-- 選択された問題内容がここに表示されます -->
+                    </div>
+                    <div class="problem-info" id="problemInfo">
+                        <!-- 問題の詳細情報 -->
+                    </div>
+                </section>
+
+                <!-- 分析結果表示 -->
+                <section class="analysis-panel" id="analysisPanel" style="display: none;">
+                    <h2>🎯 思考分析結果</h2>
+                    <div class="analysis-content" id="analysisContent">
+                        <!-- 分析結果がここに表示されます -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- 右パネル: 手書きエリア -->
+            <div class="right-panel">
+                <!-- 手書きホワイトボード -->
+                <section class="whiteboard-section">
+                    <div class="whiteboard-header">
+                        <h2>🖊️ 手書きで解いてみよう</h2>
+                        <div class="whiteboard-tools">
+                            <button id="penTool" class="tool-button active" data-tool="pen">🖊️ ペン</button>
+                            <button id="eraserTool" class="tool-button" data-tool="eraser">🧹 消しゴム</button>
+                            <input type="range" id="brushSize" min="2" max="20" value="3" class="brush-size">
+                            <span id="brushSizeDisplay">3px</span>
+                        </div>
+                    </div>
+                    
+                    <div class="whiteboard-container">
+                        <canvas id="drawingCanvas" width="1000" height="700"></canvas>
+                    </div>
+                    
+                    <div class="whiteboard-controls">
+                        <button id="clearCanvas" class="btn btn-warning">🗑️ 全消去</button>
+                        <button id="undoStroke" class="btn btn-secondary">↶ 元に戻す</button>
+                        <button id="redoStroke" class="btn btn-secondary">↷ やり直し</button>
+                        <button id="analyzeProgress" class="btn btn-primary">🔍 進捗分析</button>
+                        <button id="recognizeContent" class="btn btn-success">🤖 内容認識</button>
+                    </div>
+                </section>
+
+                <!-- 認識・分析結果 -->
+                <section class="recognition-results" id="recognitionResults" style="display: none;">
+                    <h3>🤖 AI認識結果</h3>
+                    <div class="recognition-content" id="recognitionContent">
+                        <!-- 認識結果がここに表示されます -->
+                    </div>
+                </section>
+
+                <!-- ヒント表示エリア -->
+                <section class="hints-panel" id="hintsPanel" style="display: none;">
+                    <h3>� アドバイス</h3>
+                    <div class="hints-content" id="hintsContent">
+                        <!-- ヒントがここに表示されます -->
+                    </div>
+                    <div class="hint-controls">
+                        <button class="btn btn-hint" data-level="1">💡 励まし</button>
+                        <button class="btn btn-hint" data-level="2">🗺️ 方向性</button>
+                        <button class="btn btn-hint" data-level="3">🎯 具体的</button>
+                        <button class="btn btn-hint" data-level="4">📖 詳細</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- ローディング表示 -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>AIが思考を分析中...</p>
+        </div>
+
+        <!-- エラー表示 -->
+        <div class="error-display" id="errorDisplay" style="display: none;">
+            <div class="error-content">
+                <h3>⚠️ エラー</h3>
+                <p id="errorMessage"></p>
+                <button id="closeError" class="btn btn-secondary">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js', v=timestamp) }}"></script>
+</body>
+</html>
