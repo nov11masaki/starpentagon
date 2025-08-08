@@ -1,3 +1,6 @@
+# Dataset - Large files (should not be tracked)
+dataset/
+
 # Environment variables
 .env
 
